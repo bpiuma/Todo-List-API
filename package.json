@@ -22,7 +22,7 @@
     "reflect-metadata": "^0.1.13",
     "tsc-watch": "^4.2.9",
     "typeorm": "^0.2.32",
-    "typeorm-uml": "^1.6.2"
+    "typeorm-uml": "^1.6.3"
   },
   "devDependencies": {
     "@admin-bro/express": "^3.1.0",

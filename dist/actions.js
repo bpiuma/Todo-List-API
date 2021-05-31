@@ -36,30 +36,31 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.getUsers = exports.createUser = void 0;
+exports.putTodos = exports.deleteUser = exports.getTodos = exports.createTodos = exports.getTodosAll = exports.getUsers = exports.createUser = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var Users_1 = require("./entities/Users");
 var utils_1 = require("./utils");
+var Todos_1 = require("./entities/Todos");
+//agregar un usuario
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var userRepo, user, newUser, results;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                // important validations to avoid ambiguos errors, the client needs to understand what went wrong
-                if (!req.body.first_name)
-                    throw new utils_1.Exception("Please provide a first_name");
-                if (!req.body.last_name)
-                    throw new utils_1.Exception("Please provide a last_name");
+                //verficamos que el request contenga email y password
                 if (!req.body.email)
-                    throw new utils_1.Exception("Please provide an email");
+                    throw new utils_1.Exception("Por favor ingrese un email");
                 if (!req.body.password)
-                    throw new utils_1.Exception("Please provide a password");
+                    throw new utils_1.Exception("Por favor ingrese un password");
                 userRepo = typeorm_1.getRepository(Users_1.Users);
-                return [4 /*yield*/, userRepo.findOne({ where: { email: req.body.email } })];
+                return [4 /*yield*/, userRepo.findOne({ where: { email: req.body.email } })
+                    //verificamos que ya exista algun usuario con ese email
+                ];
             case 1:
                 user = _a.sent();
+                //verificamos que ya exista algun usuario con ese email
                 if (user)
-                    throw new utils_1.Exception("Users already exists with this email");
+                    throw new utils_1.Exception("Ya existe un usuario con ese email");
                 newUser = typeorm_1.getRepository(Users_1.Users).create(req.body);
                 return [4 /*yield*/, typeorm_1.getRepository(Users_1.Users).save(newUser)];
             case 2:
@@ -69,11 +70,12 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
     });
 }); };
 exports.createUser = createUser;
+//obtener todos los usuarios
 var getUsers = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var users;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(Users_1.Users).find()];
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(Users_1.Users).find({ relations: ["todos"] })];
             case 1:
                 users = _a.sent();
                 return [2 /*return*/, res.json(users)];
@@ -81,3 +83,177 @@ var getUsers = function (req, res) { return __awaiter(void 0, void 0, void 0, fu
     });
 }); };
 exports.getUsers = getUsers;
+//obtener todas las tareas 
+var getTodosAll = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var todo;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(Todos_1.Todos).find({ relations: ["user"] })];
+            case 1:
+                todo = _a.sent();
+                return [2 /*return*/, res.json(todo)];
+        }
+    });
+}); };
+exports.getTodosAll = getTodosAll;
+//agregar lista de tareas a un usuario por id
+var createTodos = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userRepo, usuario, listaTareas, todosRepo, todos, i, j, results, i, todo;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userRepo = typeorm_1.getRepository(Users_1.Users);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: req.params.userId } })
+                    //verificamos que exista el usuario
+                ];
+            case 1:
+                usuario = _a.sent();
+                //verificamos que exista el usuario
+                if (!usuario)
+                    throw new utils_1.Exception("No existe usuario con ese id");
+                listaTareas = req.body.labels;
+                //verificamos que el request contenga la lista de tareas
+                if (!listaTareas)
+                    throw new utils_1.Exception("Por favor ingrese una lista de tareas");
+                todosRepo = typeorm_1.getRepository(Todos_1.Todos);
+                return [4 /*yield*/, todosRepo.find({ where: { user: usuario } })
+                    //verificamos si alguna de las tareas de la lista ya existe para ese usuario
+                ];
+            case 2:
+                todos = _a.sent();
+                //verificamos si alguna de las tareas de la lista ya existe para ese usuario
+                console.log(listaTareas);
+                console.log(todos);
+                for (i = 0; i < listaTareas.length; i++) {
+                    for (j = 0; j < todos.length; j++) {
+                        if (listaTareas[i] == todos[j].label)
+                            throw new utils_1.Exception("Una de las tareas ya existe para ese usuario");
+                    }
+                }
+                results = [];
+                i = 0;
+                _a.label = 3;
+            case 3:
+                if (!(i < listaTareas.length)) return [3 /*break*/, 6];
+                todo = new Todos_1.Todos();
+                todo.label = listaTareas[i];
+                todo.done = false;
+                todo.user = usuario;
+                return [4 /*yield*/, todosRepo.save(todo)];
+            case 4:
+                _a.sent();
+                results.push(todo);
+                _a.label = 5;
+            case 5:
+                i++;
+                return [3 /*break*/, 3];
+            case 6: return [2 /*return*/, res.json(results)];
+        }
+    });
+}); };
+exports.createTodos = createTodos;
+//obtener las tareas de un usuario por id
+var getTodos = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userRepo, usuario, todosRepo, todos;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userRepo = typeorm_1.getRepository(Users_1.Users);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: req.params.userId } })
+                    //verificamos que exista el usuario
+                ];
+            case 1:
+                usuario = _a.sent();
+                //verificamos que exista el usuario
+                if (!usuario)
+                    throw new utils_1.Exception("No existe usuario con ese id");
+                todosRepo = typeorm_1.getRepository(Todos_1.Todos);
+                return [4 /*yield*/, todosRepo.find({ where: { user: req.params.userId } })];
+            case 2:
+                todos = _a.sent();
+                return [2 /*return*/, res.json(todos)];
+        }
+    });
+}); };
+exports.getTodos = getTodos;
+//eliminar un usuario por id, y todas sus tareas
+var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userRepo, usuario, todosRepo, todos, idUsuario, usuarioBorrado;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userRepo = typeorm_1.getRepository(Users_1.Users);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: req.params.userId } })
+                    //verificamos que exista el usuario
+                ];
+            case 1:
+                usuario = _a.sent();
+                //verificamos que exista el usuario
+                if (!usuario)
+                    throw new utils_1.Exception("No existe usuario con ese id");
+                todosRepo = typeorm_1.getRepository(Todos_1.Todos);
+                return [4 /*yield*/, todosRepo["delete"]({ user: usuario })
+                    //eliminamos el usuario
+                ];
+            case 2:
+                todos = _a.sent();
+                idUsuario = parseInt(req.params.userId);
+                return [4 /*yield*/, userRepo["delete"]({ id: idUsuario })];
+            case 3:
+                usuarioBorrado = _a.sent();
+                if (todos.affected || usuarioBorrado.affected)
+                    return [2 /*return*/, res.json({ "message": "Eliminado correctamente" })];
+                else
+                    return [2 /*return*/, res.json({ "message": "No se ha eliminado" })];
+                return [2 /*return*/];
+        }
+    });
+}); };
+exports.deleteUser = deleteUser;
+//actualizar todas las tareas de un usuario por id
+var putTodos = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userRepo, usuario, listaTareas, todosRepo, results, i, todo;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userRepo = typeorm_1.getRepository(Users_1.Users);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: req.params.userId } })
+                    //verificamos que exista el usuario
+                ];
+            case 1:
+                usuario = _a.sent();
+                //verificamos que exista el usuario
+                if (!usuario)
+                    throw new utils_1.Exception("No existe usuario con ese id");
+                listaTareas = req.body.labels;
+                //verificamos que el request contenga la lista de tareas a agregar
+                if (!listaTareas)
+                    throw new utils_1.Exception("Por favor ingrese una lista de tareas");
+                todosRepo = typeorm_1.getRepository(Todos_1.Todos);
+                return [4 /*yield*/, todosRepo["delete"]({ user: usuario })
+                    //agregamos la lista de tareas
+                ];
+            case 2:
+                _a.sent();
+                results = [];
+                i = 0;
+                _a.label = 3;
+            case 3:
+                if (!(i < listaTareas.length)) return [3 /*break*/, 6];
+                todo = new Todos_1.Todos();
+                todo.label = listaTareas[i];
+                todo.done = false;
+                todo.user = usuario;
+                return [4 /*yield*/, todosRepo.save(todo)];
+            case 4:
+                _a.sent();
+                results.push(todo);
+                _a.label = 5;
+            case 5:
+                i++;
+                return [3 /*break*/, 3];
+            case 6: return [2 /*return*/, res.json(results)];
+        }
+    });
+}); };
+exports.putTodos = putTodos;

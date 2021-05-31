@@ -1,0 +1,12 @@
+{
+	"slug" : "todo-list-api",
+	"title" : "Todo List API",
+	"description": "Build a Todo List API using Flask or Django",
+	"status": "published",
+	"translations": ["es", "us"],
+	"difficulty": "intermediate",
+	"preview": "https://github.com/breatheco-de/exercise-todo-list-api/blob/master/preview.jpg?raw=true",
+	"duration" : 8,
+	"technologies": ["flask", "python", "json", "logging"],
+	"talents": []
+}
